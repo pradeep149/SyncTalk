@@ -8,11 +8,10 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
+    git \
+    python3 python3-pip \
     libasound2-dev portaudio19-dev libportaudio2 libportaudiocpp0 ffmpeg \
     && rm -rf /var/lib/apt/lists/*
-
-# Install Python and pip
-RUN apt-get update && apt-get install -y python3 python3-pip
 
 # Set working directory
 WORKDIR /app
@@ -21,13 +20,14 @@ WORKDIR /app
 COPY . .
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Install PyTorch3D (if needed)
-RUN python ./scripts/install_pytorch3d.py
+# Install PyTorch3D properly (instead of using the script)
+RUN pip3 install torch torchvision
+RUN pip3 install "git+https://github.com/facebookresearch/pytorch3d.git"
 
 # Install custom modules
-RUN pip install ./freqencoder ./shencoder ./gridencoder ./raymarching
+RUN pip3 install ./freqencoder ./shencoder ./gridencoder ./raymarching
 
 # Download model data (Google Drive)
 RUN apt-get install -y wget unzip && \
