@@ -33,3 +33,4 @@ fastapi
 uvicorn
 nest_asyncio
 ffmpeg-python
+python-multipart
