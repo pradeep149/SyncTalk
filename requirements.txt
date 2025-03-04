@@ -33,4 +33,3 @@ fastapi
 uvicorn
 requests
 pydantic==1.10.12
-base64
