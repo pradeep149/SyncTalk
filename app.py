@@ -27,8 +27,16 @@ def run_inference(audio_path: str, output_filename: str):
         "--aud", audio_path
     ]
 
+    # Run the inference process
     process = subprocess.run(inference_cmd, capture_output=True, text=True)
     
+    # Log inference output for debugging
+    with open("inference_log.txt", "a") as log_file:
+        log_file.write(f"\n[Inference Log] {output_filename}:\n")
+        log_file.write(process.stdout)
+        log_file.write(process.stderr)
+
+    # Check if the video was generated successfully
     if os.path.exists(output_video_path):
         return output_video_path
     else:
@@ -59,7 +67,12 @@ async def predict(background_tasks: BackgroundTasks, request: Request):
         # Run inference in the background
         background_tasks.add_task(run_inference, file_path, output_filename)
 
-        return JSONResponse(content={"message": "Inference started", "output_file": f"/output/{output_filename}"})
+        return JSONResponse(content={
+            "message": "Inference started",
+            "status": "processing",
+            "input_file": file_path,
+            "expected_output": f"/output/{output_filename}"
+        })
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -72,7 +85,17 @@ async def get_output(filename: str):
     file_path = os.path.join(OUTPUT_DIR, filename)
     if os.path.exists(file_path):
         return FileResponse(file_path, media_type="video/mp4", filename=filename)
-    return JSONResponse(content={"error": "File not found"}, status_code=404)
+    return JSONResponse(content={"error": "File not found", "status": "failed"}, status_code=404)
+
+@app.get("/status/{filename}")
+async def get_status(filename: str):
+    """
+    Checks whether the inference has completed.
+    """
+    file_path = os.path.join(OUTPUT_DIR, filename)
+    if os.path.exists(file_path):
+        return JSONResponse(content={"status": "completed", "output_file": f"/output/{filename}"})
+    return JSONResponse(content={"status": "processing", "message": "Inference still in progress."})
 
 if __name__ == "__main__":
     import uvicorn
