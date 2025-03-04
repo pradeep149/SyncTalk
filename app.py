@@ -1,9 +1,10 @@
-from fastapi import FastAPI, File, UploadFile, BackgroundTasks
+from fastapi import FastAPI, BackgroundTasks, HTTPException, Request
 from fastapi.responses import JSONResponse, FileResponse
 import subprocess
 import shutil
 import os
 import uuid
+import base64
 
 app = FastAPI()
 
@@ -34,24 +35,34 @@ def run_inference(audio_path: str, output_filename: str):
         return None
 
 @app.post("/predict/")
-async def predict(background_tasks: BackgroundTasks, audio: UploadFile = File(...)):
+async def predict(background_tasks: BackgroundTasks, request: Request):
     """
-    Accepts an audio file, runs inference in the background, and returns the output.
+    Accepts a Base64-encoded audio file, decodes it, runs inference, and returns the output.
     """
-    # Generate unique filename
-    file_ext = os.path.splitext(audio.filename)[-1]
-    unique_id = str(uuid.uuid4())[:8]
-    file_path = os.path.join(UPLOAD_DIR, f"input_{unique_id}{file_ext}")
-    output_filename = f"output_{unique_id}.mp4"
+    try:
+        request_data = await request.json()  # Parse JSON body
+        if "audio" not in request_data:
+            raise HTTPException(status_code=400, detail="Missing 'audio' field in request.")
 
-    # Save uploaded file
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(audio.file, buffer)
+        # Extract Base64 string
+        audio_base64 = request_data["audio"]
 
-    # Run inference in the background
-    background_tasks.add_task(run_inference, file_path, output_filename)
+        # Generate unique filename
+        unique_id = str(uuid.uuid4())[:8]
+        file_path = os.path.join(UPLOAD_DIR, f"input_{unique_id}.wav")
+        output_filename = f"output_{unique_id}.mp4"
 
-    return JSONResponse(content={"message": "Inference started", "output_file": f"/output/{output_filename}"})
+        # Decode Base64 and save as a WAV file
+        with open(file_path, "wb") as audio_file:
+            audio_file.write(base64.b64decode(audio_base64))
+
+        # Run inference in the background
+        background_tasks.add_task(run_inference, file_path, output_filename)
+
+        return JSONResponse(content={"message": "Inference started", "output_file": f"/output/{output_filename}"})
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/output/{filename}")
 async def get_output(filename: str):
