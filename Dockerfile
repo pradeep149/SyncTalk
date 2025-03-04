@@ -16,24 +16,27 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /app
 
-# Copy project files (including modules)
+# Copy project files (including module directories)
 COPY . /app
 
-# Install Python dependencies
+# Ensure Python dependencies are installed first
 RUN pip3 install --no-cache-dir -r requirements.txt
 
 # Install PyTorch3D properly
 RUN pip3 install torch torchvision
 RUN pip3 install "git+https://github.com/facebookresearch/pytorch3d.git"
 
-# Ensure module folders exist before installing
+# Debug: Check if module directories exist
 RUN ls -la ./freqencoder ./shencoder ./gridencoder ./raymarching || true
 
-# Fix possible permission issues
+# Fix permissions (if needed)
 RUN chmod -R 755 ./freqencoder ./shencoder ./gridencoder ./raymarching || true
 
-# Install custom modules
-RUN pip3 install ./freqencoder ./shencoder ./gridencoder ./raymarching
+# Install custom modules (one by one for debugging)
+RUN pip3 install ./freqencoder || true
+RUN pip3 install ./shencoder || true
+RUN pip3 install ./gridencoder || true
+RUN pip3 install ./raymarching || true
 
 # Download model data (Google Drive)
 RUN apt-get install -y wget unzip && \
