@@ -1,5 +1,5 @@
-# Use the latest valid CUDA version (12.3.2) that exists
-FROM nvidia/cuda:12.3.2-cudnn8-devel-ubuntu22.04
+# Use the latest stable CUDA version available
+FROM nvidia/cuda:12.2.2-cudnn8-devel-ubuntu22.04
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -22,8 +22,8 @@ COPY . /app
 # Install Python dependencies
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Install correct PyTorch version for CUDA 12.3.2
-RUN pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu123
+# Install correct PyTorch version for CUDA 12.2
+RUN pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu122
 
 # Install PyTorch3D properly (Directly from GitHub)
 RUN pip3 install "git+https://github.com/facebookresearch/pytorch3d.git"
