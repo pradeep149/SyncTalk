@@ -29,3 +29,7 @@ onnxruntime-gpu
 librosa
 fvcore
 iopath
+fastapi
+uvicorn
+nest_asyncio
+ffmpeg-python
