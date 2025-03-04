@@ -31,6 +31,8 @@ fvcore
 iopath
 fastapi
 uvicorn
-nest_asyncio
-ffmpeg-python
 python-multipart
+requests
+pydantic
+base64
+gunicorn
