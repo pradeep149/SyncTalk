@@ -25,7 +25,7 @@ configargparse
 mediapipe
 lpips
 imageio-ffmpeg
-onnxruntime==1.16.0
+onnxruntime-gpu
 librosa
 fvcore
 iopath
@@ -33,6 +33,6 @@ fastapi
 uvicorn
 python-multipart
 requests
-pydantic
+pydantic==1.10.12
 base64
-gunicorn
+gunicorn==20.1.0
